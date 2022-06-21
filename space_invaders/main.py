@@ -67,7 +67,11 @@ class Spaceship(pygame.sprite.Sprite):
     if key[pygame.K_SPACE] and time_now - self.last_shot > cooldown:
       #Add Bullet to sprite group 
       bullet = Bullet(self.rect.centerx, self.rect.top)
+      bulletR = Scatter_Bullet(self.rect.centerx, self.rect.top, 10)
+      bulletL = Scatter_Bullet(self.rect.centerx, self.rect.top, -10)
       bullet_group.add(bullet)
+      bullet_group.add(bulletR)
+      bullet_group.add(bulletL)
 
       # Play laser shot sound
       self.shoot_sound.play()
@@ -126,6 +130,26 @@ class Bullet(pygame.sprite.Sprite):
 
   def update(self, dt, time_now):
     self.rect.y -= self.speed * dt
+
+    if self.rect.y <= -5:
+      self.kill()
+    if pygame.sprite.spritecollide(self, alien_group, True):
+      self.kill()
+      print("HIT")
+
+class Scatter_Bullet(Bullet):
+  def __init__(self, x, y, scatter):
+    self.scatter = scatter
+    super().__init__(x, y)
+
+  def update(self, dt, time_now):
+    self.rect.y -= self.speed * dt
+
+    # I don't know why, but for left vs right there needs to be different multipliers.
+    if self.scatter > 0:
+      self.rect.x += self.scatter * 10 * dt
+    else:
+      self.rect.x += self.scatter * 2 * dt
 
     if self.rect.y <= -5:
       self.kill()

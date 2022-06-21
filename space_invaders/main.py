@@ -6,7 +6,7 @@ import pygame.font
 import time
 
 
-WIDTH, HEIGHT = 480, 640
+WIDTH, HEIGHT = 480, 740
 SCALE = 1.5
 SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 FPS = 60

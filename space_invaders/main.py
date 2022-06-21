@@ -418,9 +418,6 @@ class App():
     pygame.display.update()
 
   def on_continue(self):
-    self.bullet_group.empty()
-    self.player_group.empty()
-    self.alien_group.empty()
 
     global difficulty
     global current_health
@@ -428,7 +425,7 @@ class App():
     if current_health < 3:
       current_health += 1
 
-    self.on_init()
+    self.alien_group = self.level.create_aliens(6,6,self.alien_group)
 
   def on_reset(self):
     self.bullet_group.empty()

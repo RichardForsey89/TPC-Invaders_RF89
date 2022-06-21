@@ -25,6 +25,7 @@ current_health = 0
 bullet_group = pygame.sprite.Group()
 alien_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+explosion_group = pygame.sprite.Group()
 
 
 #create spaceship class
@@ -92,6 +93,58 @@ class Spaceship(pygame.sprite.Sprite):
     # Move the ship
     self.rect.x += dx * speed * dt
 
+class Explosion(pygame.sprite.Sprite):
+  def __init__(self, x, y):
+    pygame.sprite.Sprite.__init__(self)
+    self.load_sprite()
+    self.rect = self.image.get_rect()
+    self.rect.center = [x,y]
+    self.dir = dir
+    self.timer = 0
+    self.sound = pygame.mixer.Sound('sounds/bomb.wav')
+
+    # explosion sound
+    self.sound.play()
+
+  def load_sprite(self):
+    self.image_sheet = pygame.image.load("sprites/explosion_pixelfied (16 x 16).png").convert_alpha()
+    self.dir = 1
+    self.sprites = []
+    self.sprites.append(self.image_sheet.subsurface((0,0,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((16,0,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((32,0,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((48,0,16,16)))
+
+    self.sprites.append(self.image_sheet.subsurface((0,16,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((16,16,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((32,16,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((48,16,16,16)))
+
+    self.sprites.append(self.image_sheet.subsurface((0,32,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((16,32,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((32,32,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((48,32,16,16)))
+
+    self.sprites.append(self.image_sheet.subsurface((0,48,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((16,48,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((32,48,16,16)))
+    self.sprites.append(self.image_sheet.subsurface((48,48,16,16)))
+
+    for i in range(len(self.sprites)):
+      self.sprites[i] = pygame.transform.scale(self.sprites[i], (32,32))
+
+    self.image = self.sprites[0]
+    self.image_index = 0
+
+  def update(self, dt, time_now):
+    if time_now - self.timer >= 20:
+      self.image_index += 1
+      if self.image_index >= len(self.sprites):
+        self.kill()
+      else:
+        self.image = self.sprites[self.image_index]
+        self.timer = time_now
+
 class Alien(pygame.sprite.Sprite):
   def __init__(self, x, y, dir=1, speed=5):
     pygame.sprite.Sprite.__init__(self)
@@ -154,6 +207,8 @@ class Bullet(pygame.sprite.Sprite):
       target = test[0]
       target.damage()
       if target.hp < 1:
+        explosion = Explosion(target.rect.centerx, target.rect.centery)
+        explosion_group.add(explosion)
         target.kill()
 
       global player_score
@@ -185,6 +240,8 @@ class Scatter_Bullet(Bullet):
       target = test[0]
       target.damage()
       if target.hp < 1:
+        explosion = Explosion(target.rect.centerx, target.rect.centery)
+        explosion_group.add(explosion)
         target.kill()
 
       global player_score
@@ -213,7 +270,7 @@ class Alien_Bullet(pygame.sprite.Sprite):
       self.kill()
       global current_health
       current_health -= 1
-      
+
       if current_health < 1:
          player = player_group.sprites()
          player[0].kill()
@@ -295,6 +352,7 @@ class App():
 
     self.bullet_group = bullet_group
     self.alien_group = alien_group
+    self.explosion_group = explosion_group
 
     self.alien_group = self.level.create_aliens(6,6,self.alien_group)
   # Handle events
@@ -322,9 +380,8 @@ class App():
 
     self.bullet_group.update(self.dt, time_now)
     self.alien_group.update(self.dt, time_now)
+    self.explosion_group.update(self.dt, time_now)
 
-
-    
     if len(alien_group) == 0:
       self.on_continue()
 
@@ -347,6 +404,9 @@ class App():
     self.player_group.draw(temp_buffer)
     self.bullet_group.draw(temp_buffer)
     self.alien_group.draw(temp_buffer)
+
+    self.explosion_group.draw(temp_buffer)
+
     temp_buffer = pygame.transform.scale(temp_buffer, (SCALE_WIDTH, SCALE_HEIGHT))
     self._display_surf.blit(temp_buffer, (0,0))
 
@@ -374,6 +434,7 @@ class App():
     self.bullet_group.empty()
     self.player_group.empty()
     self.alien_group.empty()
+    self.explosion_group.empty()
 
     global GAME_OVER
     GAME_OVER = False

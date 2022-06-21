@@ -1,5 +1,6 @@
 import random
 import pygame
+import pygame.font
 import time
 
 
@@ -8,14 +9,19 @@ SCALE = 1.5
 SCALE_WIDTH, SCALE_HEIGHT = WIDTH * SCALE, HEIGHT * SCALE
 FPS = 60
 
+pygame.font.init()
+GAME_FONT = pygame.font.SysFont('couriernew', 30)
+
 # Game Over Flag
 GAME_OVER = False
 
+player_score = 0
 
 # Sprite Collision Groups
 bullet_group = pygame.sprite.Group()
 alien_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
+
 
 #create spaceship class
 class Spaceship(pygame.sprite.Sprite):
@@ -113,7 +119,7 @@ class Alien(pygame.sprite.Sprite):
       if self.image_index >= len(self.sprites):
         self.image_index = 0
       #print("SPRITE CAHNGE")
-      if random.random() < 0.025:
+      if random.random() < 0.015:
         bullet_group.add(Alien_Bullet(self.rect.centerx, self.rect.bottom))
         self.sound.play()
       self.image = self.sprites[self.image_index]
@@ -134,6 +140,8 @@ class Bullet(pygame.sprite.Sprite):
     if self.rect.y <= -5:
       self.kill()
     if pygame.sprite.spritecollide(self, alien_group, True):
+      global player_score
+      player_score += 100
       self.kill()
       print("HIT")
 
@@ -145,15 +153,19 @@ class Scatter_Bullet(Bullet):
   def update(self, dt, time_now):
     self.rect.y -= self.speed * dt
 
-    # I don't know why, but for left vs right there needs to be different multipliers.
+    # I don't know why, but for right vs left there needs to be different multipliers.
     if self.scatter > 0:
+      #right
       self.rect.x += self.scatter * 10 * dt
     else:
+      #left
       self.rect.x += self.scatter * 2 * dt
 
     if self.rect.y <= -5:
       self.kill()
     if pygame.sprite.spritecollide(self, alien_group, True):
+      global player_score
+      player_score += 100
       self.kill()
       print("HIT")
 
@@ -291,12 +303,17 @@ class App():
   def on_render(self):
     temp_buffer = pygame.Surface((WIDTH, HEIGHT))
     temp_buffer.blit(*self.level.get_surface())
+
+    string = "Score: {0}".format(player_score)
+    text = GAME_FONT.render(string,True,(255,255,255))
+
     
     self.player_group.draw(temp_buffer)
     self.bullet_group.draw(temp_buffer)
     self.alien_group.draw(temp_buffer)
     temp_buffer = pygame.transform.scale(temp_buffer, (SCALE_WIDTH, SCALE_HEIGHT))
     self._display_surf.blit(temp_buffer, (0,0))
+    self._display_surf.blit(text, (0,0))
     #update display
     pygame.display.update()
 
@@ -306,6 +323,8 @@ class App():
     self.alien_group.empty()
     global GAME_OVER
     GAME_OVER = False
+    global player_score
+    player_score = 0
     self.on_init()
   def on_cleanup(self):
     pygame.quit()

@@ -90,8 +90,70 @@ class Spaceship(pygame.sprite.Sprite):
       self.shoot_sound.play()
       self.last_shot = time_now
 
+    if key[pygame.K_b] and time_now - self.last_shot > cooldown:
+
+      #Add torp to sprite group 
+      torp = Torp(self.rect.centerx, self.rect.top)
+
+      bullet_group.add(torp)
+
+
+      # Play laser shot sound
+      self.shoot_sound.play()
+      self.last_shot = time_now
+
     # Move the ship
     self.rect.x += dx * speed * dt
+
+class Big_Explosion(pygame.sprite.Sprite):
+  def __init__(self, x, y):
+    pygame.sprite.Sprite.__init__(self)
+    self.load_sprite()
+    self.rect = self.image.get_rect()
+    self.rect.center = [x,y]
+    self.dir = dir
+    self.timer = 0
+    self.sound = pygame.mixer.Sound('sounds/torp_explosion.wav')
+
+    # explosion sound
+    self.sound.play()
+
+  def load_sprite(self):
+    self.image_sheet = pygame.image.load("sprites/big_boom (128 x 128).png").convert_alpha()
+    self.dir = 1
+    self.sprites = []
+
+    pixels = 128
+    rows = 7
+    cols = 6
+    for r in range(rows):
+      for c in range(cols):
+        self.sprites.append(self.image_sheet.subsurface((128*c,128*r,128,128)))
+
+    for i in range(len(self.sprites)):
+      self.sprites[i] = pygame.transform.scale(self.sprites[i], (256,256))
+
+    self.image = self.sprites[0]
+    self.image_index = 0
+
+  def update(self, dt, time_now):
+    if time_now - self.timer >= 10:
+      self.image_index += 1
+      if self.image_index == 1:
+        oofd = pygame.sprite.spritecollide(self, alien_group, False)
+        for alien in oofd:
+          # explosion = Explosion(alien.rect.centerx, alien.rect.centery)
+          # explosion_group.add(explosion)
+
+          # Need to make a "quiet explosion"
+          
+          alien.kill()
+        
+      if self.image_index >= len(self.sprites):
+        self.kill()
+      else:
+        self.image = self.sprites[self.image_index]
+        self.timer = time_now
 
 class Explosion(pygame.sprite.Sprite):
   def __init__(self, x, y):
@@ -186,6 +248,29 @@ class Alien(pygame.sprite.Sprite):
         self.sound.play()
       self.image = self.sprites[self.image_index]
       self.timer = time_now 
+
+class Torp(pygame.sprite.Sprite):
+  def __init__(self, x, y):
+    pygame.sprite.Sprite.__init__(self)
+    self.image = pygame.image.load('sprites/torp.png')
+    self.rect = self.image.get_rect()
+    self.rect.center = [x,y]
+    self.speed = 250
+
+  def update(self, dt, time_now):
+    self.rect.y -= self.speed * dt
+
+    if self.rect.y <= -5:
+      self.kill()
+    if pygame.sprite.spritecollide(self, alien_group, False):
+      blast = Big_Explosion(self.rect.centerx, self.rect.centery)
+      explosion_group.add(blast)
+      self.kill()
+      print("TORPEDO")
+
+      global player_score
+      player_score += 10000
+
 
 class Bullet(pygame.sprite.Sprite):
   def __init__(self, x, y):

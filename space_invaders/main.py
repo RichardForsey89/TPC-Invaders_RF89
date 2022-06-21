@@ -1,3 +1,4 @@
+from ctypes import sizeof
 import random
 import pygame
 import pygame.font
@@ -96,7 +97,10 @@ class Alien(pygame.sprite.Sprite):
     self.dir = dir
     self.timer = 0
     self.sound = pygame.mixer.Sound('sounds/alien_shot.wav')
+    self.hp = 2
 
+  def damage(self):
+    self.hp -= 1
 
   def load_sprite(self):
     self.image_sheet = pygame.image.load("sprites/Alan (16 x 16).png").convert_alpha()
@@ -139,7 +143,14 @@ class Bullet(pygame.sprite.Sprite):
 
     if self.rect.y <= -5:
       self.kill()
-    if pygame.sprite.spritecollide(self, alien_group, True):
+    if pygame.sprite.spritecollide(self, alien_group, False):
+
+      test = pygame.sprite.spritecollide(self, alien_group, False)
+      target = test[0]
+      target.damage()
+      if target.hp < 1:
+        target.kill()
+
       global player_score
       player_score += 100
       self.kill()
@@ -163,7 +174,14 @@ class Scatter_Bullet(Bullet):
 
     if self.rect.y <= -5:
       self.kill()
-    if pygame.sprite.spritecollide(self, alien_group, True):
+    if pygame.sprite.spritecollide(self, alien_group, False):
+
+      test = pygame.sprite.spritecollide(self, alien_group, False)
+      target = test[0]
+      target.damage()
+      if target.hp < 1:
+        target.kill()
+
       global player_score
       player_score += 100
       self.kill()
@@ -276,7 +294,7 @@ class App():
   def on_loop(self):
     global GAME_OVER
     self.clock.tick(FPS)
-    print(self.clock.get_fps())
+    # print(self.clock.get_fps())
     self.now = time.time()
     self.dt = self.now - self.prev_time
     self.prev_time = self.now

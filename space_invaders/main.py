@@ -19,6 +19,7 @@ GAME_OVER = False
 
 player_score = 0
 difficulty = 1
+current_health = 0
 
 # Sprite Collision Groups
 bullet_group = pygame.sprite.Group()
@@ -35,7 +36,9 @@ class Spaceship(pygame.sprite.Sprite):
     self.rect = self.image.get_rect()
     self.rect.center = [x, y]
     self.last_shot = pygame.time.get_ticks()
-    
+
+    global current_health
+    current_health = health
 
     # Shooting Sound
     self.shoot_sound = pygame.mixer.Sound('sounds/laser_shot.wav')
@@ -206,12 +209,19 @@ class Alien_Bullet(pygame.sprite.Sprite):
 
     if self.rect.y >= HEIGHT:
       self.kill()
-    if pygame.sprite.spritecollide(self, player_group, True):
+    if pygame.sprite.spritecollide(self, player_group, False):
       self.kill()
-      global GAME_OVER
-      GAME_OVER = True
+      global current_health
+      current_health -= 1
+      
+      if current_health < 1:
+         player = player_group.sprites()
+         player[0].kill()
+         global GAME_OVER
+         GAME_OVER = True
 
-
+   
+  
 class Level():
 
   def __init__(self):
@@ -330,6 +340,9 @@ class App():
     string = "Difficulty: {0}".format(difficulty)
     difficulty_text = GAME_FONT.render(string,True,(255,255,255))
 
+    string = "Health: {0}".format(current_health)
+    health_text = GAME_FONT.render(string,True,(255,255,255))
+
     
     self.player_group.draw(temp_buffer)
     self.bullet_group.draw(temp_buffer)
@@ -339,6 +352,7 @@ class App():
 
     self._display_surf.blit(score_text, (0,0))
     self._display_surf.blit(difficulty_text, (400,0))
+    self._display_surf.blit(health_text, (0,30))
 
     #update display
     pygame.display.update()
@@ -349,7 +363,10 @@ class App():
     self.alien_group.empty()
 
     global difficulty
+    global current_health
     difficulty += 1
+    if current_health < 3:
+      current_health += 1
 
     self.on_init()
 
@@ -366,6 +383,9 @@ class App():
 
     global difficulty
     difficulty = 1
+
+    global current_health
+    current_health = 3
 
     self.on_init()
   def on_cleanup(self):

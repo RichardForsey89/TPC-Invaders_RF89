@@ -1,3 +1,4 @@
+from ast import Global
 from ctypes import sizeof
 import random
 import pygame
@@ -17,6 +18,7 @@ GAME_FONT = pygame.font.SysFont('couriernew', 30)
 GAME_OVER = False
 
 player_score = 0
+difficulty = 1
 
 # Sprite Collision Groups
 bullet_group = pygame.sprite.Group()
@@ -55,7 +57,7 @@ class Spaceship(pygame.sprite.Sprite):
     #set movement speed
     speed = 250
     #set a cooldown variable
-    cooldown = 500 #milliseconds
+    cooldown = 500 / difficulty #milliseconds
     dx = 0
 
     #get key press for movement
@@ -97,7 +99,7 @@ class Alien(pygame.sprite.Sprite):
     self.dir = dir
     self.timer = 0
     self.sound = pygame.mixer.Sound('sounds/alien_shot.wav')
-    self.hp = 2
+    self.hp = difficulty
 
   def damage(self):
     self.hp -= 1
@@ -123,7 +125,7 @@ class Alien(pygame.sprite.Sprite):
       if self.image_index >= len(self.sprites):
         self.image_index = 0
       #print("SPRITE CAHNGE")
-      if random.random() < 0.015:
+      if random.random() < 0.005 * difficulty:
         bullet_group.add(Alien_Bullet(self.rect.centerx, self.rect.bottom))
         self.sound.play()
       self.image = self.sprites[self.image_index]
@@ -314,7 +316,7 @@ class App():
 
     
     if len(alien_group) == 0:
-      GAME_OVER = True
+      self.on_continue()
 
 
   # blit render layers to screen surface
@@ -323,7 +325,10 @@ class App():
     temp_buffer.blit(*self.level.get_surface())
 
     string = "Score: {0}".format(player_score)
-    text = GAME_FONT.render(string,True,(255,255,255))
+    score_text = GAME_FONT.render(string,True,(255,255,255))
+
+    string = "Difficulty: {0}".format(difficulty)
+    difficulty_text = GAME_FONT.render(string,True,(255,255,255))
 
     
     self.player_group.draw(temp_buffer)
@@ -331,18 +336,37 @@ class App():
     self.alien_group.draw(temp_buffer)
     temp_buffer = pygame.transform.scale(temp_buffer, (SCALE_WIDTH, SCALE_HEIGHT))
     self._display_surf.blit(temp_buffer, (0,0))
-    self._display_surf.blit(text, (0,0))
+
+    self._display_surf.blit(score_text, (0,0))
+    self._display_surf.blit(difficulty_text, (400,0))
+
     #update display
     pygame.display.update()
+
+  def on_continue(self):
+    self.bullet_group.empty()
+    self.player_group.empty()
+    self.alien_group.empty()
+
+    global difficulty
+    difficulty += 1
+
+    self.on_init()
 
   def on_reset(self):
     self.bullet_group.empty()
     self.player_group.empty()
     self.alien_group.empty()
+
     global GAME_OVER
     GAME_OVER = False
+
     global player_score
     player_score = 0
+
+    global difficulty
+    difficulty = 1
+
     self.on_init()
   def on_cleanup(self):
     pygame.quit()
